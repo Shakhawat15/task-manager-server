@@ -11,7 +11,7 @@ exports.register = async (req, res) => {
     const userExists = await userModel.findOne({ email });
 
     if (userExists) {
-      return apiResponse.ErrorResponse(res, "User already exists");
+      return apiResponse.ErrorResponse(res, "Email already exists");
     }
 
     // hash password

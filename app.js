@@ -6,7 +6,6 @@ require("dotenv").config();
 const morgan = require("morgan");
 const cors = require("cors");
 const { readdirSync } = require("fs");
-const e = require("express");
 
 // middlewares
 app.use(helmet());
