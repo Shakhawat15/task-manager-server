@@ -67,6 +67,7 @@ exports.login = async (req, res) => {
       firstName: user["firstName"],
       lastName: user["lastName"],
       mobile: user["mobile"],
+      photo: user["photo"],
     };
 
     // send response
