@@ -85,10 +85,10 @@ exports.login = async (req, res) => {
 // Update user profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { firstName, lastName, mobile, photo } = req.body;
+    const { firstName, lastName, mobile, photo, password } = req.body;
     const user = await userModel.findByIdAndUpdate(
       req.user._id,
-      { firstName, lastName, mobile, photo },
+      { firstName, lastName, mobile, photo, password },
       { new: true }
     );
 
