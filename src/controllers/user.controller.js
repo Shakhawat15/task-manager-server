@@ -92,8 +92,20 @@ exports.updateProfile = async (req, res) => {
       { new: true }
     );
 
-    res.json(user);
+    return apiResponse.successResponseWithData(res, "Profile updated", user);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return apiResponse.ErrorResponse(res, error.message);
+  }
+};
+
+// Get user profile
+exports.getUserProfile = async (req, res) => {
+  try {
+    const email = req.user.email;
+    console.log("email", email);
+    const user = await userModel.findOne({ email });
+    return apiResponse.successResponseWithData(res, "User", user);
+  } catch (error) {
+    return apiResponse.ErrorResponse(res, error.message);
   }
 };
