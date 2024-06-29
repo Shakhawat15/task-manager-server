@@ -5,13 +5,13 @@ const sendEmail = async (to, subject, text) => {
     const transporter = nodeMailer.createTransport({
       host: "mail.teamrabbil.com",
       port: 25,
-      secure: false,
+      secure: true,
       auth: {
         user: "info@teamrabbil.com",
         pass: "~sR4[bhaC[Qs",
       },
       tls: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: true,
       },
     });
 
