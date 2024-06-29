@@ -1,7 +1,9 @@
 const userModel = require("../models/user.model");
+const otpModel = require("../models/otp.model");
 const { hashPassword, comparePassword } = require("../utils/password");
 const apiResponse = require("../utils/apiResponse");
 const jwt = require("jsonwebtoken");
+const sendEmail = require("../utils/sendEmail");
 
 // Registration of a new user
 exports.register = async (req, res) => {
@@ -105,6 +107,98 @@ exports.getUserProfile = async (req, res) => {
     console.log("email", email);
     const user = await userModel.findOne({ email });
     return apiResponse.successResponseWithData(res, "User", user);
+  } catch (error) {
+    return apiResponse.ErrorResponse(res, error.message);
+  }
+};
+
+// Verify Email
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { email } = req.params;
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return apiResponse.ErrorResponse(res, "User not found");
+    }
+
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000);
+
+    // if the email is already in the otp collection, update it
+    const existingOTP = await otpModel.findOne({ email });
+    if (existingOTP) {
+      existingOTP.otp = otp;
+      existingOTP.status = 0;
+      await existingOTP.save();
+      // send email
+      const subject = "Task Manager PIN Verification";
+      const text = `Your OTP code is ${otp}`;
+      await sendEmail(email, subject, text);
+      return apiResponse.successResponse(res, "OTP sent to your email");
+    } else {
+      // save otp
+      const newOTP = new otpModel({ email, otp });
+      await newOTP.save();
+      // send email
+      const subject = "Task Manager PIN Verification";
+      const text = `Your OTP code is ${otp}`;
+      await sendEmail(email, subject, text);
+      return apiResponse.successResponse(res, "OTP sent to your email");
+    }
+  } catch (error) {
+    return apiResponse.ErrorResponse(res, error.message);
+  }
+};
+
+// Verify OTP
+exports.verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.params;
+    const userOTP = await otpModel.findOne({ email, otp });
+
+    if (!userOTP) {
+      return apiResponse.ErrorResponse(res, "Invalid OTP");
+    } else if (userOTP.status === 1) {
+      return apiResponse.ErrorResponse(res, "OTP already Used");
+    }
+
+    // update otp status
+    userOTP.status = 1;
+    await userOTP.save();
+
+    return apiResponse.successResponse(res, "OTP verified successfully");
+  } catch (error) {
+    return apiResponse.ErrorResponse(res, error.message);
+  }
+};
+
+// Create New Password
+exports.resetPassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const { email, otp } = req.params;
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return apiResponse.ErrorResponse(res, "User not found");
+    }
+
+    // check if otp is verified
+    const userOTP = await otpModel.findOne({ email, otp });
+    if (!userOTP) {
+      return apiResponse.ErrorResponse(res, "Invalid OTP");
+    } else if (userOTP.status === 0) {
+      return apiResponse.ErrorResponse(res, "OTP not verified");
+    }
+
+    // hash password
+    const hashedPassword = await hashPassword(password);
+
+    // update password
+    user.password = hashedPassword;
+    await user.save();
+
+    return apiResponse.successResponse(res, "Password updated successfully");
   } catch (error) {
     return apiResponse.ErrorResponse(res, error.message);
   }
